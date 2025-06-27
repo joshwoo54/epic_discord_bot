@@ -12,9 +12,9 @@ intents.members = True  # Needed for role checking
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Role names (customize these to match your server)
-ROLE_A = "Role A"
-ROLE_B = "Role B"
-ROLE_C = "Role C"
+ROLE_A = "tester role a"
+ROLE_B = "tester role b"
+ROLE_C = "give this role"
 
 # Event: Bot is ready
 @bot.event
