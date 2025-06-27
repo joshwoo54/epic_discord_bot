@@ -12,28 +12,45 @@ import time
 # ----------------------
 
 # Define your role rules here
-ROLE_RULES = [
+MERGED_ROLE_RULES = [
     # Approval for mens/womens channels
-    {"requires": ["approved", "male"], "grants": "mens"},
-    {"requires": ["approved", "female"], "grants": "womens"},
+    {"grants": "mens", "any_requires": [["approved", "male"]]},
+    {"grants": "womens", "any_requires": [["approved", "female"]]},
 
-    # Approval for class channels
-    {"requires": ["approved", "1st year"], "grants": "1st year approved"},
-    {"requires": ["approved", "2nd year"], "grants": "2nd year approved"},
-    {"requires": ["approved", "3rd year"], "grants": "3rd year approved"},
-    {"requires": ["approved", "4th year"], "grants": "4th year approved"},
-    {"requires": ["approved", "5th+ year"], "grants": "5th+ year approved"},
+    # Class approvals
+    {"grants": "1st year approved", "any_requires": [["approved", "1st year"]]},
+    {"grants": "2nd year approved", "any_requires": [["approved", "2nd year"]]},
+    {"grants": "3rd year approved", "any_requires": [["approved", "3rd year"]]},
+    {"grants": "4th year approved", "any_requires": [["approved", "4th year"]]},
+    {"grants": "5th+ year approved", "any_requires": [["approved", "5th+ year"]]},
 
-    # Approval and conditions for cgs
-    {"requires": ["1st year approved", "male", "YES CG!!"], "grants": "T1 men"},
-    {"requires": ["1st year approved", "female", "YES CG!!"], "grants": "T1 women"},
-    {"requires": ["2nd year approved", "male", "YES CG!!"], "grants": "ISI men"},
-    {"requires": ["2nd year approved", "female", "YES CG!!"], "grants": "ISI women"},
-    {"requires": ["3rd year approved", "male", "YES CG!!"], "grants": "ISI men"},
-    {"requires": ["3rd year approved", "female", "YES CG!!"], "grants": "ISI women"},
-    {"requires": ["4th year approved", "YES CG!!"], "grants": "4th year cg"},
-    {"requires": ["5th+ year approved", "YES CG!!"], "grants": "4th year cg"},
+    # CG roles with OR conditions
+    {"grants": "T1 men", "any_requires": [["1st year approved", "male", "YES CG!!"]]},
+    {"grants": "T1 women", "any_requires": [["1st year approved", "female", "YES CG!!"]]},
+
+    {
+        "grants": "ISI men",
+        "any_requires": [
+            ["2nd year approved", "male", "YES CG!!"],
+            ["3rd year approved", "male", "YES CG!!"]
+        ]
+    },
+    {
+        "grants": "ISI women",
+        "any_requires": [
+            ["2nd year approved", "female", "YES CG!!"],
+            ["3rd year approved", "female", "YES CG!!"]
+        ]
+    },
+    {
+        "grants": "4th year cg",
+        "any_requires": [
+            ["4th year approved", "YES CG!!"],
+            ["5th+ year approved", "YES CG!!"]
+        ]
+    },
 ]
+
 
 LOG_CHANNEL_ID = 1388219823384690838  # Replace with your log channel ID
 UPDATE_COOLDOWN = 3  # seconds
@@ -84,30 +101,30 @@ async def apply_role_rules(member):
     guild = member.guild
     member_roles = [r.name for r in member.roles]
 
-    for rule in ROLE_RULES:
-        required = rule["requires"]
+    for rule in MERGED_ROLE_RULES:
         grant_name = rule["grants"]
-
         grant_role = discord.utils.get(guild.roles, name=grant_name)
         if not grant_role:
             await log_message(f"❌ Role '{grant_name}' not found.")
             continue
 
-        has_all_required = all(role in member_roles for role in required)
+        # Check if the member satisfies any condition group
+        eligible = any(all(role in member_roles for role in group) for group in rule["any_requires"])
         has_grant = grant_role in member.roles
 
-        if has_all_required and not has_grant:
+        if eligible and not has_grant:
             try:
                 await member.add_roles(grant_role)
-                await log_message(f"✅ Gave **{grant_role.name}** to **{member.display_name}**")
+                await log_message(f"➕ Gave **{grant_role.name}** to **{member.display_name}**")
             except Exception as e:
                 await log_message(f"❌ Could not add {grant_role.name} to {member.display_name}: {e}")
-        elif not has_all_required and has_grant:
+        elif not eligible and has_grant:
             try:
                 await member.remove_roles(grant_role)
-                await log_message(f"✅ Removed **{grant_role.name}** from **{member.display_name}**")
+                await log_message(f"➖ Removed **{grant_role.name}** from **{member.display_name}**")
             except Exception as e:
                 await log_message(f"❌ Could not remove {grant_role.name} from {member.display_name}: {e}")
+
 
 # ----------------------
 # Events
