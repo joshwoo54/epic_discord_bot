@@ -23,6 +23,7 @@ MERGED_ROLE_RULES = [
     {"grants": "3rd year approved", "any_requires": [["approved", "3rd year"]]},
     {"grants": "4th year approved", "any_requires": [["approved", "4th year"]]},
     {"grants": "5th+ year approved", "any_requires": [["approved", "5th+ year"]]},
+    {"grants": "alumni approved", "any_requires": [["approved", "alumni"]]},
 
     # CG roles with OR conditions
     {"grants": "T1 men", "any_requires": [["1st year approved", "male", "YES CG!!"]]},
@@ -100,6 +101,7 @@ async def log_message(message):
 async def apply_role_rules(member):
     guild = member.guild
     member_roles = [r.name for r in member.roles]
+    changed = False
 
     for rule in MERGED_ROLE_RULES:
         grant_name = rule["grants"]
@@ -108,7 +110,6 @@ async def apply_role_rules(member):
             await log_message(f"❌ Role '{grant_name}' not found.")
             continue
 
-        # Check if the member satisfies any condition group
         eligible = any(all(role in member_roles for role in group) for group in rule["any_requires"])
         has_grant = grant_role in member.roles
 
@@ -116,14 +117,19 @@ async def apply_role_rules(member):
             try:
                 await member.add_roles(grant_role)
                 await log_message(f"➕ Gave **{grant_role.name}** to **{member.display_name}**")
+                changed = True
             except Exception as e:
                 await log_message(f"❌ Could not add {grant_role.name} to {member.display_name}: {e}")
         elif not eligible and has_grant:
             try:
                 await member.remove_roles(grant_role)
                 await log_message(f"➖ Removed **{grant_role.name}** from **{member.display_name}**")
+                changed = True
             except Exception as e:
                 await log_message(f"❌ Could not remove {grant_role.name} from {member.display_name}: {e}")
+
+    return changed
+
 
 
 # ----------------------
@@ -211,6 +217,8 @@ async def migrate_roles(ctx):
 async def sweep_all_members():
     global sweeping
     sweeping = True
+    changed_count = 0
+
     try:
         if not bot.guilds:
             await log_message("❌ Bot is not in any servers.")
@@ -221,11 +229,15 @@ async def sweep_all_members():
         await log_message(f"🔍 Sweeping {len(members)} members...")
 
         for member in members:
-            await apply_role_rules(member)
-            await asyncio.sleep(0.5)  # Increased delay to avoid rate limits
+            changed = await apply_role_rules(member)
+            if changed:
+                changed_count += 1
+            await asyncio.sleep(0.5)  # delay to prevent rate limits
+
     finally:
         sweeping = False
-        await log_message("✅ Sweep completed.")
+        await log_message(f"✅ Sweep completed. {changed_count} members had roles changed.")
+
 
 # ----------------------
 # Run the Bot
