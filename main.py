@@ -5,14 +5,17 @@ from flask import Flask
 from threading import Thread
 
 # ---- Configurable role names ----
-ROLE_A = "Role A"
-ROLE_B = "Role B"
-ROLE_C = "Role C"
+ROLE_A = "tester role a"
+ROLE_B = "tester role b"
+ROLE_C = "give this role"
+
+# ---- Log channel ID (put your channel ID here) ----
+LOG_CHANNEL_ID = 605423779715219456  # <-- REPLACE with your actual channel ID (as an int)
 
 # ---- Intents ----
 intents = discord.Intents.default()
 intents.members = True  # needed to see member roles and receive member update events
-intents.message_content = True  # needed if you want to use commands
+intents.message_content = True  # needed for commands
 
 # ---- Bot Setup ----
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -29,25 +32,38 @@ def run_flask():
 
 Thread(target=run_flask).start()
 
+# --- Helper function to send logs to channel ---
+async def log_message(message):
+    channel = bot.get_channel(LOG_CHANNEL_ID)
+    if channel:
+        await channel.send(message)
+    else:
+        print(f"⚠️ Log channel not found. Message: {message}")
+
 # --- Helper function to sweep all members ---
 async def sweep_all_members():
     if not bot.guilds:
         print("❌ Bot is not in any guilds.")
+        await log_message("❌ Bot is not in any guilds.")
         return
 
-    guild = bot.guilds[0]  # If your bot is in multiple servers, adjust accordingly
+    guild = bot.guilds[0]  # Adjust if your bot is in multiple servers
     role_a = discord.utils.get(guild.roles, name=ROLE_A)
     role_b = discord.utils.get(guild.roles, name=ROLE_B)
     role_c = discord.utils.get(guild.roles, name=ROLE_C)
 
     if not all([role_a, role_b, role_c]):
-        print("❌ One or more roles are missing in the server.")
+        msg = "❌ One or more roles are missing in the server."
+        print(msg)
+        await log_message(msg)
         return
 
     added = 0
     removed = 0
 
-    print(f"🔄 Starting sweep of {len(guild.members)} members...")
+    start_msg = f"🔄 Starting sweep of {len(guild.members)} members..."
+    print(start_msg)
+    await log_message(start_msg)
 
     for member in guild.members:
         has_a = role_a in member.roles
@@ -59,26 +75,34 @@ async def sweep_all_members():
                 await member.add_roles(role_c)
                 added += 1
             except Exception as e:
-                print(f"❌ Failed to add {ROLE_C} to {member.display_name}: {e}")
+                err_msg = f"❌ Failed to add {ROLE_C} to {member.display_name}: {e}"
+                print(err_msg)
+                await log_message(err_msg)
         elif (not has_a or not has_b) and has_c:
             try:
                 await member.remove_roles(role_c)
                 removed += 1
             except Exception as e:
-                print(f"❌ Failed to remove {ROLE_C} from {member.display_name}: {e}")
+                err_msg = f"❌ Failed to remove {ROLE_C} from {member.display_name}: {e}"
+                print(err_msg)
+                await log_message(err_msg)
 
-    print(f"✅ Sweep complete. Added: {added}, Removed: {removed}")
+    done_msg = f"✅ Sweep complete. Added: {added}, Removed: {removed}"
+    print(done_msg)
+    await log_message(done_msg)
 
 # --- Bot events ---
 
 @bot.event
 async def on_ready():
-    print(f'✅ Logged in as {bot.user}')
+    ready_msg = f'✅ Logged in as {bot.user}'
+    print(ready_msg)
+    await log_message(ready_msg)
     await sweep_all_members()
 
 @bot.event
 async def on_member_update(before, after):
-    # Check roles only if roles changed
+    # Only act if roles changed
     if before.roles == after.roles:
         return
 
@@ -88,28 +112,38 @@ async def on_member_update(before, after):
     role_c = discord.utils.get(guild.roles, name=ROLE_C)
 
     if not all([role_a, role_b, role_c]):
-        print("❌ One or more roles are missing from the server.")
+        msg = "❌ One or more roles are missing from the server."
+        print(msg)
+        await log_message(msg)
         return
 
     has_a = role_a in after.roles
     has_b = role_b in after.roles
     has_c = role_c in after.roles
 
-    # Add Role C if has A and B and missing C
+    # Add Role C if conditions met
     if has_a and has_b and not has_c:
         try:
             await after.add_roles(role_c)
-            print(f"✅ Added {ROLE_C} to {after.display_name}")
+            msg = f"✅ Added {ROLE_C} to {after.display_name}"
+            print(msg)
+            await log_message(msg)
         except Exception as e:
-            print(f"❌ Failed to add {ROLE_C}: {e}")
+            err_msg = f"❌ Failed to add {ROLE_C} to {after.display_name}: {e}"
+            print(err_msg)
+            await log_message(err_msg)
 
-    # Remove Role C if missing A or B but has C
+    # Remove Role C if conditions not met
     elif (not has_a or not has_b) and has_c:
         try:
             await after.remove_roles(role_c)
-            print(f"✅ Removed {ROLE_C} from {after.display_name}")
+            msg = f"✅ Removed {ROLE_C} from {after.display_name}"
+            print(msg)
+            await log_message(msg)
         except Exception as e:
-            print(f"❌ Failed to remove {ROLE_C}: {e}")
+            err_msg = f"❌ Failed to remove {ROLE_C} from {after.display_name}: {e}"
+            print(err_msg)
+            await log_message(err_msg)
 
 # --- Commands ---
 
@@ -134,6 +168,7 @@ async def check_roles(ctx, member: discord.Member = None):
         try:
             await member.add_roles(role_c)
             await ctx.send(f"✅ {member.mention} has been given **{ROLE_C}**.")
+            await log_message(f"✅ {member.display_name} given {ROLE_C} by command !check_roles")
         except Exception as e:
             await ctx.send(f"❌ Failed to add role: {e}")
     elif has_c:
@@ -142,9 +177,10 @@ async def check_roles(ctx, member: discord.Member = None):
         await ctx.send(f"❌ {member.mention} does not meet the role requirements.")
 
 @bot.command(name='sweep_roles')
-@commands.has_permissions(administrator=True)  # Optional: restrict to admins
+@commands.has_permissions(administrator=True)  # Optional: admin-only
 async def sweep_roles(ctx):
     await ctx.send("🔄 Starting sweep for all members...")
+    await log_message(f"🔄 {ctx.author.display_name} triggered sweep_roles command.")
     await sweep_all_members()
     await ctx.send("✅ Sweep complete.")
 
