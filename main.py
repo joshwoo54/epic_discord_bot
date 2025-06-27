@@ -5,6 +5,13 @@ import asyncio
 from flask import Flask
 from threading import Thread
 
+from collections import defaultdict
+import time
+
+recent_updates = defaultdict(float)
+UPDATE_COOLDOWN = 3  # seconds
+
+
 # ----------------------
 # Configuration
 # ----------------------
@@ -162,8 +169,17 @@ async def on_ready():
 
 @bot.event
 async def on_member_update(before, after):
-    if before.roles != after.roles:
-        await apply_role_rules(after)
+    if set(before.roles) == set(after.roles):
+        return  # no role change
+
+    # Avoid rapid duplicate triggers
+    now = time.time()
+    if now - recent_updates[after.id] < UPDATE_COOLDOWN:
+        return
+    recent_updates[after.id] = now
+
+    await asyncio.sleep(1)  # allow Discord to finish processing roles
+    await apply_role_rules(after)
 
 # ----------------------
 # Commands
