@@ -41,6 +41,40 @@ ROLE_RULES = [
     {
         "requires": ["approved", "5th+ year"],
         "grants": "5th+ year approved"
+    },
+
+    #approval and conditions for cgs
+    {
+        "requires": ["1st year approved", "male", "YES CG!!"],
+        "grants": "T1 men"
+    },
+    {
+        "requires": ["1st year approved", "female", "YES CG!!"],
+        "grants": "T1 women"
+    },
+    {
+        "requires": ["2nd year approved", "male", "YES CG!!"],
+        "grants": "ISI men"
+    },
+    {
+        "requires": ["2nd year approved", "female", "YES CG!!"],
+        "grants": "ISI women"
+    },
+    {
+        "requires": ["3rd year approved", "male", "YES CG!!"],
+        "grants": "ISI men"
+    },
+    {
+        "requires": ["3rd year approved", "female", "YES CG!!"],
+        "grants": "ISI women"
+    },
+    {
+        "requires": ["4th year approved", "YES CG!!"],
+        "grants": "4th year cg"
+    },
+    {
+        "requires": ["5th+ year approved", "YES CG!!"],
+        "grants": "4th year cg"
     }
 ]
 
