@@ -11,6 +11,7 @@ from threading import Thread
 
 # Define your role rules here
 ROLE_RULES = [
+    #approval for mens/womens channels
     {
         "requires": ["approved", "male"],
         "grants": "mens"
@@ -18,6 +19,28 @@ ROLE_RULES = [
     {
         "requires": ["approved", "female"],
         "grants": "womens"
+    },
+    
+    #approval for class channels
+    {
+        "requires": ["approved", "1st year"],
+        "grants": "1st year approved"
+    },
+    {
+        "requires": ["approved", "2nd year"],
+        "grants": "2nd year approved"
+    },
+    {
+        "requires": ["approved", "3rd year"],
+        "grants": "3rd year approved"
+    },
+    {
+        "requires": ["approved", "4th year"],
+        "grants": "4th year approved"
+    },
+    {
+        "requires": ["approved", "5th+ year"],
+        "grants": "5th+ year approved"
     }
 ]
 
