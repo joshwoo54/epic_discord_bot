@@ -132,8 +132,8 @@ async def sweep_roles(ctx):
 async def migrate_roles(ctx):
     guild = ctx.guild
 
-    source_role_names = ["T1 men", "T1 women", "ISI men", "ISI women", "4th year cg"]  # Replace with your actual role names
-    target_role_name = "YES CG!!"  # Replace with the new role name
+    source_role_names = ["4th year", "5th+ year"]  # Replace with your actual role names
+    target_role_name = "alumni"  # Replace with the new role name
 
     source_roles = [discord.utils.get(guild.roles, name=name) for name in source_role_names]
     target_role = discord.utils.get(guild.roles, name=target_role_name)
