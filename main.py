@@ -4,24 +4,21 @@ import os
 from flask import Flask
 from threading import Thread
 
-# Intents setup
-intents = discord.Intents.default()
-intents.members = True  # Needed for role checking
+# ------------ Bot Setup ------------ #
 
-# Bot setup
+intents = discord.Intents.default()
+intents.members = True  # Needed to read member roles
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Role names (customize these to match your server)
-ROLE_A = "tester role a"
-ROLE_B = "tester role b"
-ROLE_C = "give this role"
+# Customize role names
+ROLE_A = "Role A"
+ROLE_B = "Role B"
+ROLE_C = "Role C"
 
-# Event: Bot is ready
 @bot.event
 async def on_ready():
     print(f'✅ Logged in as {bot.user}')
 
-# Event: Member's roles updated
 @bot.event
 async def on_member_update(before, after):
     guild = after.guild
@@ -30,24 +27,24 @@ async def on_member_update(before, after):
     role_c = discord.utils.get(guild.roles, name=ROLE_C)
 
     if not all([role_a, role_b, role_c]):
-        print("❌ One or more roles are missing from the server.")
+        print("❌ One or more roles are missing.")
         return
 
     has_a = role_a in after.roles
     has_b = role_b in after.roles
     has_c = role_c in after.roles
 
-    print(f"🔄 Checking roles for {after.name} | A: {has_a}, B: {has_b}, C: {has_c}")
+    print(f"🔄 Role update for {after.name}: A={has_a}, B={has_b}, C={has_c}")
 
-    # ✅ Add Role C if A and B are present, and C is not
+    # Add Role C if both A and B are present
     if has_a and has_b and not has_c:
         try:
             await after.add_roles(role_c)
-            print(f"✅ Assigned {role_c.name} to {after.display_name}")
+            print(f"✅ Added {role_c.name} to {after.display_name}")
         except Exception as e:
-            print(f"❌ Failed to assign role: {e}")
+            print(f"❌ Failed to add role: {e}")
 
-    # ❌ Remove Role C if either A or B is missing and C is present
+    # Remove Role C if either A or B is missing
     elif (not has_a or not has_b) and has_c:
         try:
             await after.remove_roles(role_c)
@@ -55,7 +52,8 @@ async def on_member_update(before, after):
         except Exception as e:
             print(f"❌ Failed to remove role: {e}")
 
-# Optional: Manual command to check a member
+# ------------ Commands ------------ #
+
 @bot.command()
 async def check_roles(ctx, member: discord.Member = None):
     if member is None:
@@ -65,18 +63,62 @@ async def check_roles(ctx, member: discord.Member = None):
     role_b = discord.utils.get(ctx.guild.roles, name=ROLE_B)
     role_c = discord.utils.get(ctx.guild.roles, name=ROLE_C)
 
-    if role_a in member.roles and role_b in member.roles:
-        if role_c not in member.roles:
-            await member.add_roles(role_c)
-            await ctx.send(f'{member.mention} has been given **{role_c.name}**.')
-        else:
-            await ctx.send(f'{member.mention} already has **{role_c.name}**.')
-    else:
-        await ctx.send(f'{member.mention} does not meet the role requirements.')
+    if not all([role_a, role_b, role_c]):
+        await ctx.send("❌ One or more roles are missing.")
+        return
 
-# ----------------------------
-# Flask web server (for UptimeRobot)
-# ----------------------------
+    has_a = role_a in member.roles
+    has_b = role_b in member.roles
+    has_c = role_c in member.roles
+
+    if has_a and has_b:
+        if not has_c:
+            await member.add_roles(role_c)
+            await ctx.send(f'✅ {member.mention} has been given **{role_c.name}**.')
+        else:
+            await ctx.send(f'ℹ️ {member.mention} already has **{role_c.name}**.')
+    else:
+        if has_c:
+            await member.remove_roles(role_c)
+            await ctx.send(f'🗑️ {member.mention} lost **{role_c.name}** (missing A or B).')
+        else:
+            await ctx.send(f'❌ {member.mention} does not meet the role requirements.')
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def sweep_roles(ctx):
+    """Check all members and assign/remove Role C as needed."""
+    role_a = discord.utils.get(ctx.guild.roles, name=ROLE_A)
+    role_b = discord.utils.get(ctx.guild.roles, name=ROLE_B)
+    role_c = discord.utils.get(ctx.guild.roles, name=ROLE_C)
+
+    if not all([role_a, role_b, role_c]):
+        await ctx.send("❌ One or more roles are missing.")
+        return
+
+    added, removed = 0, 0
+
+    for member in ctx.guild.members:
+        has_a = role_a in member.roles
+        has_b = role_b in member.roles
+        has_c = role_c in member.roles
+
+        if has_a and has_b and not has_c:
+            try:
+                await member.add_roles(role_c)
+                added += 1
+            except:
+                pass
+        elif (not has_a or not has_b) and has_c:
+            try:
+                await member.remove_roles(role_c)
+                removed += 1
+            except:
+                pass
+
+    await ctx.send(f"✅ Sweep done. Added: {added}, Removed: {removed}")
+
+# ------------ Flask Web Server (UptimeRobot) ------------ #
 
 app = Flask('')
 
@@ -89,5 +131,6 @@ def run():
 
 Thread(target=run).start()
 
-# Start the bot with your token from Secrets
+# ------------ Run the Bot ------------ #
+
 bot.run(os.environ['BOT_TOKEN'])
