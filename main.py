@@ -4,13 +4,8 @@ import os
 import asyncio
 from flask import Flask
 from threading import Thread
-
 from collections import defaultdict
 import time
-
-recent_updates = defaultdict(float)
-UPDATE_COOLDOWN = 3  # seconds
-
 
 # ----------------------
 # Configuration
@@ -18,75 +13,32 @@ UPDATE_COOLDOWN = 3  # seconds
 
 # Define your role rules here
 ROLE_RULES = [
-    #approval for mens/womens channels
-    {
-        "requires": ["approved", "male"],
-        "grants": "mens"
-    },
-    {
-        "requires": ["approved", "female"],
-        "grants": "womens"
-    },
-    
-    #approval for class channels
-    {
-        "requires": ["approved", "1st year"],
-        "grants": "1st year approved"
-    },
-    {
-        "requires": ["approved", "2nd year"],
-        "grants": "2nd year approved"
-    },
-    {
-        "requires": ["approved", "3rd year"],
-        "grants": "3rd year approved"
-    },
-    {
-        "requires": ["approved", "4th year"],
-        "grants": "4th year approved"
-    },
-    {
-        "requires": ["approved", "5th+ year"],
-        "grants": "5th+ year approved"
-    },
+    # Approval for mens/womens channels
+    {"requires": ["approved", "male"], "grants": "mens"},
+    {"requires": ["approved", "female"], "grants": "womens"},
 
-    #approval and conditions for cgs
-    {
-        "requires": ["1st year approved", "male", "YES CG!!"],
-        "grants": "T1 men"
-    },
-    {
-        "requires": ["1st year approved", "female", "YES CG!!"],
-        "grants": "T1 women"
-    },
-    {
-        "requires": ["2nd year approved", "male", "YES CG!!"],
-        "grants": "ISI men"
-    },
-    {
-        "requires": ["2nd year approved", "female", "YES CG!!"],
-        "grants": "ISI women"
-    },
-    {
-        "requires": ["3rd year approved", "male", "YES CG!!"],
-        "grants": "ISI men"
-    },
-    {
-        "requires": ["3rd year approved", "female", "YES CG!!"],
-        "grants": "ISI women"
-    },
-    {
-        "requires": ["4th year approved", "YES CG!!"],
-        "grants": "4th year cg"
-    },
-    {
-        "requires": ["5th+ year approved", "YES CG!!"],
-        "grants": "4th year cg"
-    }
+    # Approval for class channels
+    {"requires": ["approved", "1st year"], "grants": "1st year approved"},
+    {"requires": ["approved", "2nd year"], "grants": "2nd year approved"},
+    {"requires": ["approved", "3rd year"], "grants": "3rd year approved"},
+    {"requires": ["approved", "4th year"], "grants": "4th year approved"},
+    {"requires": ["approved", "5th+ year"], "grants": "5th+ year approved"},
+
+    # Approval and conditions for cgs
+    {"requires": ["1st year approved", "male", "YES CG!!"], "grants": "T1 men"},
+    {"requires": ["1st year approved", "female", "YES CG!!"], "grants": "T1 women"},
+    {"requires": ["2nd year approved", "male", "YES CG!!"], "grants": "ISI men"},
+    {"requires": ["2nd year approved", "female", "YES CG!!"], "grants": "ISI women"},
+    {"requires": ["3rd year approved", "male", "YES CG!!"], "grants": "ISI men"},
+    {"requires": ["3rd year approved", "female", "YES CG!!"], "grants": "ISI women"},
+    {"requires": ["4th year approved", "YES CG!!"], "grants": "4th year cg"},
+    {"requires": ["5th+ year approved", "YES CG!!"], "grants": "4th year cg"},
 ]
 
 LOG_CHANNEL_ID = 1388219823384690838  # Replace with your log channel ID
-#updated with discord perms
+UPDATE_COOLDOWN = 3  # seconds
+recent_updates = defaultdict(float)
+sweeping = False
 
 # ----------------------
 # Bot Setup
@@ -141,7 +93,7 @@ async def apply_role_rules(member):
             await log_message(f"❌ Role '{grant_name}' not found.")
             continue
 
-        has_all_required = all(role_name in member_roles for role_name in required)
+        has_all_required = all(role in member_roles for role in required)
         has_grant = grant_role in member.roles
 
         if has_all_required and not has_grant:
@@ -169,16 +121,19 @@ async def on_ready():
 
 @bot.event
 async def on_member_update(before, after):
-    if set(before.roles) == set(after.roles):
-        return  # no role change
+    global sweeping
+    if sweeping:
+        return
 
-    # Avoid rapid duplicate triggers
+    if set(before.roles) == set(after.roles):
+        return  # No role change
+
     now = time.time()
     if now - recent_updates[after.id] < UPDATE_COOLDOWN:
         return
     recent_updates[after.id] = now
 
-    await asyncio.sleep(1)  # allow Discord to finish processing roles
+    await asyncio.sleep(1.5)  # Let Discord finish processing roles
     await apply_role_rules(after)
 
 # ----------------------
@@ -205,8 +160,8 @@ async def sweep_roles(ctx):
 async def migrate_roles(ctx):
     guild = ctx.guild
 
-    source_role_names = ["4th year", "5th+ year"]  # Replace with your actual role names
-    target_role_name = "alumni"  # Replace with the new role name
+    source_role_names = ["4th year", "5th+ year"]
+    target_role_name = "alumni"
 
     source_roles = [discord.utils.get(guild.roles, name=name) for name in source_role_names]
     target_role = discord.utils.get(guild.roles, name=target_role_name)
@@ -225,33 +180,35 @@ async def migrate_roles(ctx):
                         await member.remove_roles(role)
                 await log_message(f"🔁 Migrated {member.display_name} → {target_role.name}")
                 updated += 1
-                await asyncio.sleep(0.1)  # Prevent rate limit issues
+                await asyncio.sleep(0.1)
             except Exception as e:
                 await log_message(f"❌ Failed to migrate {member.display_name}: {e}")
 
     await ctx.send(f"✅ Migrated {updated} members to {target_role.name}.")
     await log_message(f"✅ Batch role migration completed. {updated} members updated.")
 
-
-
 # ----------------------
 # Sweep Function (with delay)
 # ----------------------
 
 async def sweep_all_members():
-    if not bot.guilds:
-        await log_message("❌ Bot is not in any servers.")
-        return
+    global sweeping
+    sweeping = True
+    try:
+        if not bot.guilds:
+            await log_message("❌ Bot is not in any servers.")
+            return
 
-    guild = bot.guilds[0]
-    members = guild.members
-    await log_message(f"🔍 Sweeping {len(members)} members...")
+        guild = bot.guilds[0]
+        members = guild.members
+        await log_message(f"🔍 Sweeping {len(members)} members...")
 
-    for member in members:
-        await apply_role_rules(member)
-        await asyncio.sleep(0.1)  # 100ms delay between members
-
-    await log_message("✅ Sweep completed.")
+        for member in members:
+            await apply_role_rules(member)
+            await asyncio.sleep(0.5)  # Increased delay to avoid rate limits
+    finally:
+        sweeping = False
+        await log_message("✅ Sweep completed.")
 
 # ----------------------
 # Run the Bot
