@@ -12,20 +12,16 @@ from threading import Thread
 # Define your role rules here
 ROLE_RULES = [
     {
-        "requires": ["tester role a", "tester role b"],
-        "grants": "give this role"
+        "requires": ["approved", "male"],
+        "grants": "mens"
     },
     {
-        "requires": ["Role X", "Role Y", "Role Z"],
-        "grants": "Elite"
-    },
-    {
-        "requires": ["Verified"],
-        "grants": "Member"
+        "requires": ["approved", "female"],
+        "grants": "womens"
     }
 ]
 
-LOG_CHANNEL_ID = 605423779715219456  # Replace with your log channel ID
+LOG_CHANNEL_ID = 1388219823384690838  # Replace with your log channel ID
 
 # ----------------------
 # Bot Setup
@@ -86,13 +82,13 @@ async def apply_role_rules(member):
         if has_all_required and not has_grant:
             try:
                 await member.add_roles(grant_role)
-                await log_message(f"✅ Gave **{grant_role.name}** to {member.display_name}")
+                await log_message(f"✅ Gave **{grant_role.name}** to **{member.display_name}**")
             except Exception as e:
                 await log_message(f"❌ Could not add {grant_role.name} to {member.display_name}: {e}")
         elif not has_all_required and has_grant:
             try:
                 await member.remove_roles(grant_role)
-                await log_message(f"✅ Removed **{grant_role.name}** from {member.display_name}")
+                await log_message(f"✅ Removed **{grant_role.name}** from **{member.display_name}**")
             except Exception as e:
                 await log_message(f"❌ Could not remove {grant_role.name} from {member.display_name}: {e}")
 
@@ -129,6 +125,40 @@ async def sweep_roles(ctx):
     await log_message(f"🧹 {ctx.author.display_name} triggered a sweep.")
     await sweep_all_members()
     await ctx.send("✅ Sweep complete.")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def migrate_roles(ctx):
+    guild = ctx.guild
+
+    source_role_names = ["T1 men", "T1 women", "ISI men", "ISI women", "4th year cg"]  # Replace with your actual role names
+    target_role_name = "YES CG!!"  # Replace with the new role name
+
+    source_roles = [discord.utils.get(guild.roles, name=name) for name in source_role_names]
+    target_role = discord.utils.get(guild.roles, name=target_role_name)
+
+    if not target_role or any(r is None for r in source_roles):
+        await ctx.send("❌ One or more roles not found. Check role names.")
+        return
+
+    updated = 0
+    for member in guild.members:
+        if any(role in member.roles for role in source_roles):
+            try:
+                await member.add_roles(target_role)
+                for role in source_roles:
+                    if role in member.roles:
+                        await member.remove_roles(role)
+                await log_message(f"🔁 Migrated {member.display_name} → {target_role.name}")
+                updated += 1
+                await asyncio.sleep(0.1)  # Prevent rate limit issues
+            except Exception as e:
+                await log_message(f"❌ Failed to migrate {member.display_name}: {e}")
+
+    await ctx.send(f"✅ Migrated {updated} members to {target_role.name}.")
+    await log_message(f"✅ Batch role migration completed. {updated} members updated.")
+
+
 
 # ----------------------
 # Sweep Function (with delay)
