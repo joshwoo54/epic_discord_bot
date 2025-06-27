@@ -22,6 +22,7 @@ ROLE_RULES = [
 ]
 
 LOG_CHANNEL_ID = 1388219823384690838  # Replace with your log channel ID
+#updated with discord perms
 
 # ----------------------
 # Bot Setup
