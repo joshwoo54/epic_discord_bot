@@ -24,10 +24,16 @@ async def on_ready():
 # Event: Member's roles updated
 @bot.event
 async def on_member_update(before, after):
+    print(f"🔄 Detected role update for {after.name}")
     guild = after.guild
     role_a = discord.utils.get(guild.roles, name=ROLE_A)
     role_b = discord.utils.get(guild.roles, name=ROLE_B)
     role_c = discord.utils.get(guild.roles, name=ROLE_C)
+
+    print(f"🔍 Checking roles for {after.name}")
+    print(f"Role A: {role_a in after.roles}")
+    print(f"Role B: {role_b in after.roles}")
+    print(f"Already has Role C: {role_c in after.roles}")
 
     if not all([role_a, role_b, role_c]):
         print("❌ One or more roles are missing from the server.")
