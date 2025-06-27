@@ -24,27 +24,36 @@ async def on_ready():
 # Event: Member's roles updated
 @bot.event
 async def on_member_update(before, after):
-    print(f"🔄 Detected role update for {after.name}")
     guild = after.guild
     role_a = discord.utils.get(guild.roles, name=ROLE_A)
     role_b = discord.utils.get(guild.roles, name=ROLE_B)
     role_c = discord.utils.get(guild.roles, name=ROLE_C)
 
-    print(f"🔍 Checking roles for {after.name}")
-    print(f"Role A: {role_a in after.roles}")
-    print(f"Role B: {role_b in after.roles}")
-    print(f"Already has Role C: {role_c in after.roles}")
-
     if not all([role_a, role_b, role_c]):
         print("❌ One or more roles are missing from the server.")
         return
 
-    if role_a in after.roles and role_b in after.roles and role_c not in after.roles:
+    has_a = role_a in after.roles
+    has_b = role_b in after.roles
+    has_c = role_c in after.roles
+
+    print(f"🔄 Checking roles for {after.name} | A: {has_a}, B: {has_b}, C: {has_c}")
+
+    # ✅ Add Role C if A and B are present, and C is not
+    if has_a and has_b and not has_c:
         try:
             await after.add_roles(role_c)
-            print(f"✅ Gave {role_c.name} to {after.display_name}")
+            print(f"✅ Assigned {role_c.name} to {after.display_name}")
         except Exception as e:
             print(f"❌ Failed to assign role: {e}")
+
+    # ❌ Remove Role C if either A or B is missing and C is present
+    elif (not has_a or not has_b) and has_c:
+        try:
+            await after.remove_roles(role_c)
+            print(f"🗑️ Removed {role_c.name} from {after.display_name}")
+        except Exception as e:
+            print(f"❌ Failed to remove role: {e}")
 
 # Optional: Manual command to check a member
 @bot.command()
