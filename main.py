@@ -167,8 +167,9 @@ async def on_member_update(before, after):
 async def check_roles(ctx, member: discord.Member = None):
     if member is None:
         member = ctx.author
+    await ctx.send(f"🔍 Checking roles for {member.display_name}")
     await apply_role_rules(member)
-    await ctx.send(f"🔍 Checked roles for {member.display_name}")
+    await ctx.send(f"✅ Check complete.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
