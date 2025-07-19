@@ -15,14 +15,14 @@ SHEET_TABS = ["Fall Quarter", "Winter Quarter", "Spring Quarter"]
 
 CHANNEL_Z_ID = 1395968665287135262  # to alert etls (if name filled out)
 CHANNEL_X_ID = 1396014983602769972  # to alert media team (if etl approved and either instagram post/story)
-CHANNEL_Y_ID = 1396015081770455121    # to alert lg slides team (if etl approved and lg slide)
+CHANNEL_Y_ID = 1396015081770455121  # to alert lg slides team (if etl approved and lg slide)
 
 STATUS_COL_V = 22  # Column V for condition 1 (mark as send to etl)
 STATUS_COL_W = 23  # Column W for conditions 2 & 3 (mark as send to lg/media team)
 
 spreadsheet = gc.open_by_url(SHEET_URL)
 
-def setup_sheet_task(bot):
+def setup_media_sheet_task(bot):
     @tasks.loop(seconds=60)
     async def check_sheet():
         try:
@@ -53,7 +53,7 @@ def setup_sheet_task(bot):
                         if b_val and d_val and status_v != "sent":
                             channel = bot.get_channel(CHANNEL_Z_ID)
                             if channel:
-                                msg = f"📢 **{b_val}** has added {d_val} to the media live sheet. Waiting to be reviewed!"
+                                msg = f"📢 **{b_val}** has added {d_val} to the **media live sheet**. Waiting to be reviewed!"
                                 await channel.send(msg)
                                 sheet.update_cell(i + 1, STATUS_COL_V, "SENT")
                             continue  # skip checking other conditions for this row
@@ -67,7 +67,7 @@ def setup_sheet_task(bot):
                             if j_val == "true" or k_val == "true":
                                 channel = bot.get_channel(CHANNEL_X_ID)
                                 if channel:
-                                    msg = f"📢 The ETL's have approved **{b_val}**'s media request of {d_val}. They are requesting an Instagram post/story. Please check the media live sheet!"
+                                    msg = f"📢 The ETLs have approved **{b_val}**'s media request of {d_val}. They are requesting an Instagram post/story. Please check the media live sheet!"
                                     await channel.send(msg)
                                     sent_flag = True
 
@@ -75,7 +75,7 @@ def setup_sheet_task(bot):
                             if p_val == "true":
                                 channel = bot.get_channel(CHANNEL_Y_ID)
                                 if channel:
-                                    msg = f"📢 The ETL's have approved **{b_val}**'s media request of {d_val}. They are requesting a large group slide. Please check the media live sheet!"
+                                    msg = f"📢 The ETLs have approved **{b_val}**'s media request of {d_val}. They are requesting a large group slide. Please check the media live sheet!"
                                     await channel.send(msg)
                                     sent_flag = True
 
