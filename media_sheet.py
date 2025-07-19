@@ -1,5 +1,14 @@
+import os
+import json
 import gspread
+from google.oauth2.service_account import Credentials
 from discord.ext import tasks
+
+# ---- Google Sheets Auth (Service Account from ENV) ----
+SERVICE_ACCOUNT_INFO = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
+gc = gspread.authorize(creds)
 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/15pvTgbZSvFKl5PHBDC-WRhRYE3tF_XWu8qkoCRivCtM/edit?usp=sharing"
 SHEET_TABS = ["Fall Quarter", "Winter Quarter", "Spring Quarter"]
@@ -11,7 +20,6 @@ CHANNEL_Y_ID = 1396015081770455121    # to alert lg slides team (if etl approved
 STATUS_COL_V = 22  # Column V for condition 1 (mark as send to etl)
 STATUS_COL_W = 23  # Column W for conditions 2 & 3 (mark as send to lg/media team)
 
-gc = gspread.public()
 spreadsheet = gc.open_by_url(SHEET_URL)
 
 def setup_sheet_task(bot):
