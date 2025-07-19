@@ -6,6 +6,7 @@ from flask import Flask
 from threading import Thread
 from collections import defaultdict
 import time
+from media_sheet import setup_sheet_task
 
 # ----------------------
 # Configuration
@@ -136,11 +137,25 @@ async def apply_role_rules(member):
 # Events
 # ----------------------
 
+sheet_task_started = False
+
 @bot.event
 async def on_ready():
+    global sheet_task_started
     print(f"✅ Logged in as {bot.user}")
     await log_message(f"🤖 Bot started as {bot.user}")
     await sweep_all_members()
+
+    if not sheet_task_started:
+        setup_sheet_task(bot)
+        sheet_task_started = True
+
+
+# @bot.event
+# async def on_ready():
+#     print(f"✅ Logged in as {bot.user}")
+#     await log_message(f"🤖 Bot started as {bot.user}")
+#     await sweep_all_members()
 
 @bot.event
 async def on_member_update(before, after):
