@@ -50,7 +50,7 @@ def setup_sheet_task(bot):
                         status_w = row[STATUS_COL_W - 1].strip().lower()  # Column W, mark lg/slide team
 
                         # Condition 1: send to etl
-                        if b_val and status_v != "sent":
+                        if b_val and d_val and status_v != "sent":
                             channel = bot.get_channel(CHANNEL_Z_ID)
                             if channel:
                                 msg = f"📢 **{b_val}** has added {d_val} to the media live sheet. Waiting to be reviewed!"
