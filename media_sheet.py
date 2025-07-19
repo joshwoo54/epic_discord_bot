@@ -24,7 +24,7 @@ def setup_sheet_task(bot):
                     all_rows = sheet.get_all_values()
 
                     for i, row in enumerate(all_rows):
-                        if i < 1:
+                        if i < 2:
                             continue  # skip header
 
                         # Ensure row has enough columns to avoid index errors
