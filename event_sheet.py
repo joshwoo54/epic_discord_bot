@@ -53,7 +53,7 @@ def setup_event_sheet_task(bot):
                     all_rows = sheet.get_all_values()
 
                     for i, row in enumerate(all_rows):
-                        if i < 2:
+                        if i < 1:
                             continue  # Skip headers
 
                         while len(row) < STATUS_COL_AB:
