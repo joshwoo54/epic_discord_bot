@@ -71,10 +71,12 @@ def create_calendar_event(summary, start_dt, end_dt, calendar_id="epicsanluisobi
 # --------------------
 def parse_datetime(date_str, time_str):
     try:
-        return datetime.strptime(f"{date_str} {time_str}", "%m/%d/%Y %I:%M %p")
+        # Try format like "7/31/2025 5:30:00 AM"
+        return datetime.strptime(f"{date_str} {time_str}", "%m/%d/%Y %I:%M:%S %p")
     except ValueError:
         try:
-            return datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %I:%M %p")
+            # Try ISO-like format: "2025-07-31 5:30:00 AM"
+            return datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %I:%M:%S %p")
         except ValueError:
             return None
 
