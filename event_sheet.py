@@ -1,6 +1,7 @@
 import os
 import json
 import gspread
+import asyncio
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from discord.ext import tasks
@@ -90,8 +91,8 @@ def setup_event_sheet_task(bot):
         try:
             for tab_name in SECOND_SHEET_TABS:
                 try:
-                    sheet = spreadsheet.worksheet(tab_name)
-                    all_rows = sheet.get_all_values()
+                    sheet = await asyncio.to_thread(spreadsheet.worksheet, tab_name)
+                    all_rows = await asyncio.to_thread(sheet.get_all_values)
 
                     for i, row in enumerate(all_rows):
                         if i < 1:
@@ -120,7 +121,7 @@ def setup_event_sheet_task(bot):
                             if channel:
                                 msg = f"📌 **{b_val}** has filled out the **event request form** on behalf of **{c_val}** team. Please review!"
                                 await channel.send(msg)
-                                sheet.update_cell(i + 1, STATUS_COL_AA, "SENT")
+                                await asyncio.to_thread(sheet.update_cell, i + 1, STATUS_COL_AA, "SENT")
 
                         # ---- Condition 2: event approved send to team
                         if x_val == "approved" and y_val == "approved" and z_val == "approved" and status_ab != "sent":
@@ -130,7 +131,7 @@ def setup_event_sheet_task(bot):
                                 if channel:
                                     msg = f"✅ Your event request for **{request_description}** has been approved by the ETLs!"
                                     await channel.send(msg)
-                                    sheet.update_cell(i + 1, STATUS_COL_AB, "SENT")
+                                    await asyncio.to_thread(sheet.update_cell, i + 1, STATUS_COL_AB, "SENT")
 
                                     # Calendar integration if M/N/O provided
                                     if m_val and n_val and o_val:
@@ -138,11 +139,11 @@ def setup_event_sheet_task(bot):
                                         end_dt = parse_datetime(m_val, o_val)
                                         if start_dt and end_dt:
                                             try:
-                                                create_calendar_event(request_description, start_dt, end_dt)
+                                                await asyncio.to_thread(create_calendar_event, request_description, start_dt, end_dt)
                                                 print(f"📅 Event added for '{request_description}' on {m_val}")
                                                 calendar_channel = bot.get_channel(CHANNEL_Z_ID)
                                                 if calendar_channel:
-                                                    msg = f"📅 **{l_val}** sucessfully added to the Epic Calendar!"
+                                                    msg = f"📅 **{l_val}** successfully added to the Epic Calendar!"
                                                     await calendar_channel.send(msg)
                                             except Exception as cal_err:
                                                 print(f"🛑 Calendar event failed: {cal_err}")
