@@ -143,7 +143,7 @@ def setup_event_sheet_task(bot):
                                                 calendar_channel = bot.get_channel(CHANNEL_Z_ID)
                                                 if calendar_channel:
                                                     msg = f"📅 **{l_val}** sucessfully added to the Epic Calendar!"
-                                                    await channel.send(msg)
+                                                    await calendar_channel.send(msg)
                                             except Exception as cal_err:
                                                 print(f"🛑 Calendar event failed: {cal_err}")
                             else:
