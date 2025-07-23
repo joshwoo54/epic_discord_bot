@@ -71,12 +71,16 @@ def setup_event_sheet_task(bot):
                     continue
 
                 row += [""] * max(0, STATUS_COL_AB - len(row))
-                b = row[1].strip()
-                c = row[2].strip().lower()
-                g = row[6].strip()
-                l = row[11].strip()
-                m, n, o = row[12].strip(), row[13].strip(), row[14].strip()
-                x, y, z = [row[j].strip().lower() for j in (23, 24, 25)]
+                b = row[1].strip()               # Column B (Name)
+                c = row[2].strip().lower()       # Column C (Ministry Team)
+                g = row[6].strip()               # Column G (Event Name, recurring)
+                l = row[11].strip()              # Column L (Event Name, one time)
+                m = row[12].strip()              # Column M (Date, one time)
+                n = row[13].strip()              # Column N (start time, one time)
+                o = row[14].strip()              # Column O (end time, one time)
+                x = row[23].strip().lower()      # Column X (Josh approve)
+                y = row[24].strip().lower()      # Column Y (Nikki approve)
+                z = row[25].strip().lower()      # Column Z (Ellie approve)
                 status_aa = row[STATUS_COL_AA - 1].strip().lower()
                 status_ab = row[STATUS_COL_AB - 1].strip().lower()
 

@@ -50,10 +50,14 @@ def setup_media_sheet_task(bot):
                     continue
 
                 row += [""] * max(0, STATUS_COL_W - len(row))
-                a, b, d = row[0].strip().lower(), row[1].strip(), row[3].strip()
-                j, k, p = row[9].strip().lower(), row[10].strip().lower(), row[15].strip().lower()
-                status_v = row[STATUS_COL_V - 1].strip().lower()
-                status_w = row[STATUS_COL_W - 1].strip().lower()
+                a = row[0].strip().lower()   # Column A, etl approved
+                b = row[1].strip()           # Column B, requester name
+                d = row[3].strip()           # Column D, event name
+                j = row[9].strip().lower()   # Column J, instagram post
+                k = row[10].strip().lower()  # Column K, instagram story
+                p = row[15].strip().lower()  # Column P, lg slide
+                status_v = row[STATUS_COL_V - 1].strip().lower()    # Column V, mark etl
+                status_w = row[STATUS_COL_W - 1].strip().lower()    # Column W, mark lg/slide team
 
                 if b and d and status_v != "sent":
                     chan = bot.get_channel(CHANNEL_Z_ID)
@@ -64,11 +68,22 @@ def setup_media_sheet_task(bot):
 
                 if a == "yes" and status_w != "sent":
                     sent = False
-                    if j == "true" or k == "true":
+                    if j == "true" and k == "true":
                         chan = bot.get_channel(CHANNEL_X_ID)
                         if chan:
-                            await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting an Instagram post/story. Please check the media live sheet!")
+                            await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting both an Instagram post and a story. Please check the media live sheet!")
                             sent = True
+                    elif j == "true":
+                        chan = bot.get_channel(CHANNEL_X_ID)
+                        if chan:
+                            await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting an Instagram post. Please check the media live sheet!")
+                            sent = True
+                    elif  k == "true":
+                        chan = bot.get_channel(CHANNEL_X_ID)
+                        if chan:
+                            await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting an Instagram story. Please check the media live sheet!")
+                            sent = True
+                            
                     if p == "true":
                         chan = bot.get_channel(CHANNEL_Y_ID)
                         if chan:
