@@ -17,22 +17,22 @@ calendar_service = build("calendar", "v3", credentials=creds)
 SECOND_SHEET_URL = "https://docs.google.com/spreadsheets/d/1wQbS8JCmKjNx7M43EuDW9HBfnOY25VkjnnYxBc70y0g/edit?usp=sharing"
 SECOND_SHEET_TABS = ["Form Responses 1"]
 
-CHANNEL_Z_ID = 1395968665287135262
+CHANNEL_Z_ID = 1395968665287135262  #etl
 STATUS_COL_AA = 27
 STATUS_COL_AB = 28
 
 CHANNEL_MAP = {
-    "large group": 999999999999999999,
-    "outreach": 999999999999999999,
-    "inreach": 999999999999999999,
-    "media": 1396014983602769972,
-    "mens isi": 999999999999999999,
-    "womens isi": 999999999999999999,
-    "4th year cg": 999999999999999999,
-    "worship": 999999999999999999,
-    "boyts T1": 999999999999999999,
-    "girls T1": 999999999999999999,
-    "retreats": 999999999999999999,
+    "large group": 1388258914629451917,
+    "outreach": 1388259127528259645,
+    "inreach": 1388259483335135232,
+    "media": 1388259539714969830,
+    "mens isi": 1388259626906030252,
+    "womens isi": 1388259678391242864,
+    "4th year cg": 1388259730958450889,
+    "worship": 1388259786990030928,
+    "boyts T1": 1388259868959441047,
+    "girls T1": 1388259923078549504,
+    "retreats": 1388259981001887744,
 }
 
 spreadsheet = gc.open_by_url(SECOND_SHEET_URL)

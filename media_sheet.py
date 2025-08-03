@@ -12,9 +12,9 @@ gc = gspread.authorize(creds)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/15pvTgbZSvFKl5PHBDC-WRhRYE3tF_XWu8qkoCRivCtM/edit?usp=sharing"
 SHEET_TABS = ["Fall Quarter", "Winter Quarter", "Spring Quarter"]
 
-CHANNEL_Z_ID = 1395968665287135262
-CHANNEL_X_ID = 1396014983602769972
-CHANNEL_Y_ID = 1396015081770455121
+CHANNEL_Z_ID = 1395968665287135262  #etl
+CHANNEL_X_ID = 1388259539714969830  #media
+CHANNEL_Y_ID = 1388258914629451917  #large group slides
 
 STATUS_COL_V = 22
 STATUS_COL_W = 23
