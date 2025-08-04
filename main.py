@@ -3,8 +3,12 @@ from discord.ext import commands
 import os
 import asyncio
 from flask import Flask
+from flask import Response
 from threading import Thread
 from collections import defaultdict
+from datetime import datetime, time
+import pytz
+from dateutil import parser
 import time
 from media_sheet import setup_media_sheet_task
 from event_sheet import setup_event_sheet_task
@@ -85,6 +89,61 @@ def run_flask():
     app.run(host='0.0.0.0', port=8080)
 
 Thread(target=run_flask).start()
+
+# ----------------------
+# Flask App for google sites links
+# ----------------------
+
+@app.route("/media-links")
+def media_links():
+    from media_sheet import spreadsheet, SHEET_TABS
+    html = "<html><body><ul style='font-family:sans-serif;'>"
+    now = datetime.now(pytz.timezone("America/Los_Angeles"))
+
+    for tab_name in SHEET_TABS:
+        try:
+            ws = spreadsheet.worksheet(tab_name)
+            rows = ws.get_all_values()
+        except Exception as e:
+            print(f"Error loading sheet tab {tab_name}: {e}")
+            continue
+
+        for i, row in enumerate(rows):
+            if i < 2:  # Skip header rows if any
+                continue
+
+            # Ensure enough columns for indices 6, 24, 25
+            row += [""] * 26
+
+            link = row[8].strip()       # Column I (index 8)
+            start_str = row[9].strip()  # Column J (index 9)
+            end_str = row[10].strip()   # Column K (index 10)
+
+            if not link or not start_str or not end_str:
+                continue
+
+            try:
+                tz = pytz.timezone("America/Los_Angeles")
+
+                # Parse dates flexibly with dateutil
+                start_date = parser.parse(start_str).date()
+                end_date = parser.parse(end_str).date()
+
+                # Combine with times: start = 00:00, end = 23:59:59.999999
+                start = tz.localize(datetime.combine(start_date, time.min))
+                end = tz.localize(datetime.combine(end_date, time.max))
+
+            except Exception as e:
+                print(f"Date parse error for row {i+1} in tab {tab_name}: {e}")
+                continue
+
+            # Check if current time is within the date range
+            if start <= now <= end:
+                # Output the link in a simple list item
+                html += f"<li><a href='{link}' target='_blank'>{link}</a></li>"
+
+    html += "</ul></body></html>"
+    return Response(html, mimetype="text/html")
 
 # ----------------------
 # Logging Helper

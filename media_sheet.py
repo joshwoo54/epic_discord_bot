@@ -16,8 +16,8 @@ CHANNEL_Z_ID = 1395968665287135262  #etl
 CHANNEL_X_ID = 1388259539714969830  #media
 CHANNEL_Y_ID = 1388258914629451917  #large group slides
 
-STATUS_COL_V = 22
-STATUS_COL_W = 23
+sent_to_etl = 24
+sent_to_team = 25
 
 spreadsheet = gc.open_by_url(SHEET_URL)
 
@@ -49,47 +49,49 @@ def setup_media_sheet_task(bot):
                 if i < 2:
                     continue
 
-                row += [""] * max(0, STATUS_COL_W - len(row))
+                row += [""] * max(0, sent_to_team - len(row))
                 a = row[0].strip().lower()   # Column A, etl approved
                 b = row[1].strip()           # Column B, requester name
                 d = row[3].strip()           # Column D, event name
-                j = row[9].strip().lower()   # Column J, instagram post
-                k = row[10].strip().lower()  # Column K, instagram story
-                p = row[15].strip().lower()  # Column P, lg slide
-                status_v = row[STATUS_COL_V - 1].strip().lower()    # Column V, mark etl
-                status_w = row[STATUS_COL_W - 1].strip().lower()    # Column W, mark lg/slide team
+                j = row[9].strip()           # Column J, date form open
+                k = row[10].strip()          # Column K, date form close
+                l = row[11].strip().lower()  # Column L, instagram post
+                m = row[12].strip().lower()  # Column M, instagram story
+                r = row[17].strip().lower()  # Column R, lg slide
+                status_x = row[sent_to_etl - 1].strip().lower()    # Column X, mark etl
+                status_y = row[sent_to_team - 1].strip().lower()    # Column Y, mark lg/slide team
 
-                if b and d and status_v != "sent":
+                if b and d and status_x != "sent":
                     chan = bot.get_channel(CHANNEL_Z_ID)
                     if chan:
                         await chan.send(f"📢 **{b}** has added {d} to the **media live sheet**. Waiting to be reviewed!")
-                        await loop.run_in_executor(None, partial(blocking_update_cell, ws, i+1, STATUS_COL_V, "SENT"))
+                        await loop.run_in_executor(None, partial(blocking_update_cell, ws, i+1, sent_to_etl, "SENT"))
                     continue
 
-                if a == "yes" and status_w != "sent":
+                if a == "yes" and status_y != "sent":
                     sent = False
-                    if j == "true" and k == "true":
+                    if l == "true" and m == "true":
                         chan = bot.get_channel(CHANNEL_X_ID)
                         if chan:
                             await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting both an Instagram post and a story. Please check the media live sheet!")
                             sent = True
-                    elif j == "true":
+                    elif l == "true":
                         chan = bot.get_channel(CHANNEL_X_ID)
                         if chan:
                             await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting an Instagram post. Please check the media live sheet!")
                             sent = True
-                    elif  k == "true":
+                    elif  m == "true":
                         chan = bot.get_channel(CHANNEL_X_ID)
                         if chan:
                             await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting an Instagram story. Please check the media live sheet!")
                             sent = True
                             
-                    if p == "true":
+                    if r == "true":
                         chan = bot.get_channel(CHANNEL_Y_ID)
                         if chan:
                             await chan.send(f"📢 The ETLs have approved **{b}**'s media request of {d}. They are requesting a large group slide. Please check the media live sheet!")
                             sent = True
                     if sent:
-                        await loop.run_in_executor(None, partial(blocking_update_cell, ws, i+1, STATUS_COL_W, "SENT"))
+                        await loop.run_in_executor(None, partial(blocking_update_cell, ws, i+1, sent_to_team, "SENT"))
 
     check_sheet.start()
