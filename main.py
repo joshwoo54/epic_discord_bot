@@ -116,8 +116,8 @@ def media_links():
             row += [""] * 26
 
             link = row[8].strip()       # Column I (index 8)
-            start_str = row[9].strip()  # Column J (index 9)
-            end_str = row[10].strip()   # Column K (index 10)
+            start_str = row[9].strip().rstrip(':')  # Column J (index 9)
+            end_str = row[10].strip().rstrip(':')   # Column K (index 10)
 
             if not link or not start_str or not end_str:
                 continue
