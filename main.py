@@ -10,6 +10,10 @@ from datetime import datetime, time
 import pytz
 from dateutil import parser
 import time
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from media_sheet import setup_media_sheet_task
 from event_sheet import setup_event_sheet_task
 
@@ -97,53 +101,53 @@ Thread(target=run_flask).start()
 @app.route("/media-links")
 def media_links():
     from media_sheet import spreadsheet, SHEET_TABS
-    html = "<html><body><ul style='font-family:sans-serif;'>"
+    html = "<html><body><ul>"
     now = datetime.now(pytz.timezone("America/Los_Angeles"))
+    logger.info("🌐 Media-links called, now = %s", now)
 
     for tab_name in SHEET_TABS:
+        logger.info(f"➡️ Loading tab '{tab_name}'")
         try:
             ws = spreadsheet.worksheet(tab_name)
             rows = ws.get_all_values()
+            logger.info(f"   ✅ Loaded {len(rows)} rows")
         except Exception as e:
-            print(f"Error loading sheet tab {tab_name}: {e}")
+            logger.error(f"   ❌ Failed to load tab {tab_name}: {e}")
             continue
 
         for i, row in enumerate(rows):
-            if i < 2:  # Skip header rows if any
+            if i < 2:
                 continue
 
-            # Ensure enough columns for indices 6, 24, 25
-            row += [""] * 26
+            row += [""] * 11
+            link = row[8].strip()
+            start_str = row[9].strip()
+            end_str = row[10].strip()
 
-            link = row[8].strip()       # Column I (index 8)
-            start_str = row[9].strip().rstrip(':')  # Column J (index 9)
-            end_str = row[10].strip().rstrip(':')   # Column K (index 10)
+            logger.info(f"   Row {i+1}: link='{link}', start='{start_str}', end='{end_str}'")
 
             if not link or not start_str or not end_str:
+                logger.warning("     ⚠️ Skipping row due to missing data")
                 continue
 
             try:
                 tz = pytz.timezone("America/Los_Angeles")
-
-                # Parse dates flexibly with dateutil
                 start_date = parser.parse(start_str).date()
                 end_date = parser.parse(end_str).date()
-
-                # Combine with times: start = 00:00, end = 23:59:59.999999
                 start = tz.localize(datetime.combine(start_date, time.min))
                 end = tz.localize(datetime.combine(end_date, time.max))
-
+                logger.info(f"     Parsed window: {start} → {end}")
             except Exception as e:
-                print(f"Date parse error for row {i+1} in tab {tab_name}: {e}")
+                logger.error(f"     ❌ Date parse error (row {i+1}): {e}")
                 continue
 
-            # Check if current time is within the date range
             if start <= now <= end:
-                # Output the link in a simple list item
                 html += f"<li><a href='{link}' target='_blank'>{link}</a></li>"
+                logger.info("     ✅ Link is active — added to page")
 
     html += "</ul></body></html>"
     return Response(html, mimetype="text/html")
+
 
 # ----------------------
 # Logging Helper
