@@ -101,9 +101,68 @@ Thread(target=run_flask).start()
 @app.route("/media-links")
 def media_links():
     from media_sheet import spreadsheet, SHEET_TABS
-    html = "<html><body><ul>"
     now = datetime.now(pytz.timezone("America/Los_Angeles"))
     logger.info("🌐 Media-links called, now = %s", now)
+
+    html = """
+    <html>
+    <head>
+      <title>Active Media Links</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                       Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          background: #f9f9f9;
+          color: #333;
+          padding: 20px;
+          max-width: 600px;
+          margin: auto;
+        }
+        h1 {
+          text-align: center;
+          color: #2c3e50;
+        }
+        ul {
+          list-style-type: none;
+          padding: 0;
+        }
+        li {
+          background: #fff;
+          margin: 8px 0;
+          padding: 12px 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          transition: background-color 0.3s ease;
+        }
+        li:hover {
+          background-color: #e1f0ff;
+        }
+        a {
+          color: #2980b9;
+          text-decoration: none;
+          font-weight: 600;
+        }
+        a:hover {
+          text-decoration: underline;
+        }
+        .tab-header {
+          margin-top: 40px;
+          margin-bottom: 10px;
+          font-size: 1.25rem;
+          color: #34495e;
+          border-bottom: 2px solid #2980b9;
+          padding-bottom: 4px;
+        }
+        .no-links {
+          font-style: italic;
+          color: #888;
+          margin: 10px 0 20px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Active Media Links</h1>
+    """
 
     for tab_name in SHEET_TABS:
         logger.info(f"➡️ Loading tab '{tab_name}'")
@@ -115,19 +174,22 @@ def media_links():
             logger.error(f"   ❌ Failed to load tab {tab_name}: {e}")
             continue
 
+        active_links = []
+
         for i, row in enumerate(rows):
             if i < 2:
-                continue
+                continue  # Skip header rows
 
-            row += [""] * 11
-            link = row[8].strip()
-            start_str = row[9].strip()
-            end_str = row[10].strip()
+            row += [""] * 11  # Pad row to avoid index errors
 
-            logger.info(f"   Row {i+1}: link='{link}', start='{start_str}', end='{end_str}'")
+            link = row[8].strip()  # Link URL (col I)
+            start_str = row[9].strip()  # Start date (col J)
+            end_str = row[10].strip()  # End date (col K)
+            link_name = row[3].strip()  # Link text/name (col D)
+
+            logger.info(f"   Row {i+1}: link='{link}', start='{start_str}', end='{end_str}', name='{link_name}'")
 
             if not link or not start_str or not end_str:
-                # logger.warning("     ⚠️ Skipping row due to missing data")
                 continue
 
             try:
@@ -142,11 +204,22 @@ def media_links():
                 continue
 
             if start <= now <= end:
-                html += f"<li><a href='{link}' target='_blank'>{link}</a></li>"
-                logger.info("     ✅ Link is active — added to page")
+                active_links.append((link_name or link, link))
 
-    html += "</ul></body></html>"
+        if active_links:
+            html += f'<div class="tab-header">{tab_name}</div><ul>'
+            for name, url in active_links:
+                safe_name = name if name else url
+                html += f'<li><a href="{url}" target="_blank" rel="noopener noreferrer">{safe_name}</a></li>'
+            html += '</ul>'
+        else:
+            html += f'<div class="tab-header">{tab_name}</div>'
+            html += '<p class="no-links">No active links at this time.</p>'
+
+    html += "</body></html>"
+
     return Response(html, mimetype="text/html")
+
 
 
 # ----------------------
