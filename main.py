@@ -9,7 +9,7 @@ from collections import defaultdict
 from datetime import datetime, time
 import pytz
 from dateutil import parser
-import time
+import time as pytime
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -127,7 +127,7 @@ def media_links():
             logger.info(f"   Row {i+1}: link='{link}', start='{start_str}', end='{end_str}'")
 
             if not link or not start_str or not end_str:
-                logger.warning("     ⚠️ Skipping row due to missing data")
+                # logger.warning("     ⚠️ Skipping row due to missing data")
                 continue
 
             try:
