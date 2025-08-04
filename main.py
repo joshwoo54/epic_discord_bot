@@ -146,7 +146,7 @@ def media_links():
         </style>
     </head>
     <body>
-        <h1>🎉 Live Media Links</h1>
+        <h1>Active Epic SLO Links</h1>
         <ul>
     """
 
