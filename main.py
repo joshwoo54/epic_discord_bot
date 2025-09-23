@@ -284,7 +284,8 @@ async def on_member_update(before, after):
     if sweeping:
         return
 
-    if set(before.roles) == set(after.roles):
+    if {r.id for r in before.roles} == {r.id for r in after.roles}: #hopeful fix
+    #if set(before.roles) == set(after.roles):
         return  # No role change
 
     now = time.time()
