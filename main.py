@@ -64,7 +64,7 @@ MERGED_ROLE_RULES = [
 
 
 LOG_CHANNEL_ID = 1388219823384690838  # Replace with your log channel ID
-UPDATE_COOLDOWN = 3  # seconds
+UPDATE_COOLDOWN = 1  # seconds
 recent_updates = defaultdict(float)
 sweeping = False
 
@@ -284,8 +284,8 @@ async def on_member_update(before, after):
     if sweeping:
         return
 
-    if {r.id for r in before.roles} == {r.id for r in after.roles}: #hopeful fix
-    #if set(before.roles) == set(after.roles):
+    #if {r.id for r in before.roles} == {r.id for r in after.roles}: #hopeful fix
+    if set(before.roles) == set(after.roles):
         return  # No role change
 
     now = time.time()
