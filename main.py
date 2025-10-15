@@ -64,7 +64,7 @@ MERGED_ROLE_RULES = [
 
 
 LOG_CHANNEL_ID = 1388219823384690838  # Replace with your log channel ID
-UPDATE_COOLDOWN = 1  # seconds
+UPDATE_COOLDOWN = 3  # seconds
 recent_updates = defaultdict(float)
 sweeping = False
 
@@ -370,7 +370,7 @@ async def sweep_all_members():
             changed = await apply_role_rules(member)
             if changed:
                 changed_count += 1
-            await asyncio.sleep(0.5)  # delay to prevent rate limits
+            await asyncio.sleep(2)  # delay to prevent rate limits
 
     finally:
         sweeping = False
