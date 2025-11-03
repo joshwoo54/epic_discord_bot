@@ -9,7 +9,8 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
 gc = gspread.authorize(creds)
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/15pvTgbZSvFKl5PHBDC-WRhRYE3tF_XWu8qkoCRivCtM/edit?usp=sharing"
+#SHEET_URL = "https://docs.google.com/spreadsheets/d/15pvTgbZSvFKl5PHBDC-WRhRYE3tF_XWu8qkoCRivCtM/edit?usp=sharing" old
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1mTtVfZdIV62hWSGT4zNYkQRlzjM3DynILR1y3O1wPEs/edit?usp=sharing"
 SHEET_TABS = ["Fall Quarter", "Winter Quarter", "Spring Quarter"]
 
 CHANNEL_Z_ID = 1395968665287135262  #etl

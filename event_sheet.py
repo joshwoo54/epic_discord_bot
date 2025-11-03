@@ -14,8 +14,10 @@ creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPE
 gc = gspread.authorize(creds)
 calendar_service = build("calendar", "v3", credentials=creds)
 
-SECOND_SHEET_URL = "https://docs.google.com/spreadsheets/d/1wQbS8JCmKjNx7M43EuDW9HBfnOY25VkjnnYxBc70y0g/edit?usp=sharing"
-SECOND_SHEET_TABS = ["Form Responses 1"]
+SECOND_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ynvQRNEG26NKE8zYZFhjaLL0RiBmA7hWD-np3EwqbeQ/edit?usp=sharing"
+SECOND_SHEET_TABS = ["Use this one"]
+# SECOND_SHEET_URL = "https://docs.google.com/spreadsheets/d/1wQbS8JCmKjNx7M43EuDW9HBfnOY25VkjnnYxBc70y0g/edit?usp=sharing" old
+# SECOND_SHEET_TABS = ["Form Responses 1"]
 
 CHANNEL_Z_ID = 1395968665287135262  #etl
 STATUS_COL_AA = 27
