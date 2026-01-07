@@ -9,7 +9,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 from discord.ext import tasks
-from discord import ScheduledEventEntityType, ScheduledEventPrivacyLevel
+from discord.enums import ScheduledEventEntityType, ScheduledEventPrivacyLevel
 
 # ----------------------------
 # Google Sheets + Calendar Setup
