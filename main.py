@@ -1,4 +1,5 @@
 import discord
+print("Discord.py version:", discord.__version__)
 from discord.ext import commands
 import os
 import asyncio
